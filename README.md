@@ -145,3 +145,6 @@
 ```python
 sudo pip3 install PyQt5
 ```
+
+### Запуск проекта
+Выполнить **cinema.py**
