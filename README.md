@@ -9,7 +9,7 @@
 а также напечатать заказ.
 
 ### Реализация:
-Проект сосстоит из пяти классов. 
+Проект состоит из пяти классов. 
 
 1. **State(Enum)** - состояние выбранного места. 
 Может принимать значения: **ON** - место выбрано, **OFF** - место не выбрано.
@@ -39,7 +39,7 @@
     
     **place_click()** - обработчик нажатия на кнопку с местом. При нажатии переключается состояние кнопки и меняется её цвет
 
-    **get_selected()** - возвращает список выбранных места.
+    **get_selected()** - возвращает список выбранных мест.
 
 4. **PrintDialog(QDialog)** - диалог отображения и печати заказа на принтере. Принимает на вход всю информацию о заказе. Формирует
 заказ для печати, вызывает окно печати принтера. Дизайн диалога загружается из ui файла.
@@ -92,6 +92,14 @@
     
 	**update_db()** - обновление дат сеансов в БД
 
+### Описание БД cinema_db.sqlite:
+В базе данных 6 таблиц:
+1) cinema: id, title, address, phone, url1, url2; связана с room
+2) room: id, cinema_id, name, rows, cols; связана с session
+3) session: id, room_id, film_id, date, time, price; связана с ticket и film
+4) ticket: id, session_id, row, col, order_name, price
+5) film: id, title, original, genre_id, annotation, description, premiere, producer, duration, country, release, rating, poster; связана с genre
+6) genre: id, title, name
 
 ### Скриншоты
 ![выбор-кинотеатра](images/screen-1.png "Страница выбора кинотеатра")
