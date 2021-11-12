@@ -403,7 +403,7 @@ class MyWidget(QMainWindow):
         i = 0
         for row in cursor:
             self.tableCinema.setRowCount(i + 1)
-            for j in range(3):
+            for j in range(4):
                 self.tableCinema.setItem(i, j, QTableWidgetItem(str(row[j])))
             i += 1
         self.tableCinema.resizeColumnsToContents()
