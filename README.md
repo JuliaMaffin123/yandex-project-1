@@ -143,7 +143,11 @@
 
 ### Библиотеки, необходимые для запуска
 ```python
-sudo pip3 install PyQt5
+pip install PyQt5
+pip install pysqlite
+pip install DateTime
+pip install simplejson
+pip install enum
 ```
 
 ### Запуск проекта

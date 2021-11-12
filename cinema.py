@@ -8,7 +8,8 @@ from enum import Enum
 from PyQt5 import uic
 from PyQt5.QtPrintSupport import QPrintDialog, QPrinter
 from PyQt5.QtWidgets import QApplication, QAbstractItemView
-from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QDialog, QPushButton, QLabel, QMessageBox
+from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QDialog
+from PyQt5.QtWidgets import QPushButton, QLabel, QMessageBox
 from PyQt5.QtGui import QPixmap
 
 
@@ -88,7 +89,10 @@ class TicketDialog(QDialog):
                 WHERE s.id = :ID
              """, {"ID": self.session_id})
             for row in cursor:
-                self.infoSession.setText(f'Кинотеатр: {row[6]}, Фильм: {row[5]}, Зал: {row[1]}, Сеанс: {row[2]}')
+                self.infoSession.setText(f'Кинотеатр: {row[6]}, '
+                                         f'Фильм: {row[5]}, '
+                                         f'Зал: {row[1]}, '
+                                         f'Сеанс: {row[2]}')
                 self.rows = row[3]
                 self.cols = row[4]
                 self.price = json.loads(row[7])
@@ -145,20 +149,26 @@ class TicketDialog(QDialog):
     def place_click(self):
         btn = self.sender()
         btn.switch()
-        print(f'row={btn.get_row()} col={btn.get_col()} state={btn.get_state()}')
+        print(f'row={btn.get_row()} '
+              f'col={btn.get_col()} '
+              f'state={btn.get_state()}')
 
     # Возвращает выбранные места
     def get_selected(self):
         selected = list()
         for btn in self.places:
             if btn.get_state() == State.ON:
-                selected.append((btn.get_row(), btn.get_col(), btn.get_price()))
+                selected.append((btn.get_row(),
+                                 btn.get_col(),
+                                 btn.get_price())
+                                )
         return selected
 
 
 # Печать заказа
 class PrintDialog(QDialog):
-    def __init__(self, order, selected, cinema, address, film, day, time, room):
+    def __init__(self, order, selected, cinema, address,
+                 film, day, time, room):
         super().__init__()
         # Переменные
         self.order = order
@@ -185,16 +195,22 @@ class PrintDialog(QDialog):
         self.printButton.clicked.connect(self.print_click)
         # Текст заказа
         self.orderInfo.append(f"<h1>Заказ №{self.order}</h1>")
-        self.orderInfo.append(f"<p><b>Кинотеатр:</b> {self.cinema}<br>"
+        self.orderInfo.append(f"<p>"
+                              f"<b>Кинотеатр:</b> {self.cinema}<br>"
                               f"<b>Адрес:</b> {self.address}<br>"
                               f"<b>Зал:</b> {self.room}<br>"
                               f"<b>Название фильма:</b> {self.film}<br>"
-                              f"<b>Начало сеанса:</b> {self.day} {self.time}</p>")
+                              f"<b>Начало сеанса:</b> {self.day} {self.time}"
+                              f"</p>")
 
         table = f"<table><tr><th>№ ряда</th><th>Место</th><th>Цена</th></tr>"
         itogo = 0
         for row in self.selected:
-            table += f"<tr><td>{row[0] + 1}</td><td>{row[1] + 1}</td><td>{row[2]}р.</td></tr>"
+            table += f"<tr>" \
+                     f"<td>{row[0] + 1}</td>" \
+                     f"<td>{row[1] + 1}</td>" \
+                     f"<td>{row[2]}р.</td>" \
+                     f"</tr>"
             itogo += row[2]
         table += f"<tr><th>Итого</th><th>&nbsp;</th><th>{itogo}р.</th></tr>"
         table += f"</table>"
@@ -318,14 +334,20 @@ class MyWidget(QMainWindow):
                 order = self.new_order()
                 # Сохраним данные
                 self.save_order(self.session, order, selected)
-                QMessageBox.information(self, "Заказ билетов", f"Забронировано {len(selected)} билета(ов) на сумму {price} рублей. Номер заказа: {order}")
+                QMessageBox.information(self, "Заказ билетов",
+                                        f"Забронировано {len(selected)} "
+                                        f"билета(ов) на сумму {price} "
+                                        f"рублей. Номер заказа: {order}")
                 # Печатаем заказ
-                print_dialog = PrintDialog(order, selected, self.cinema_name, self.address, self.film_name,
-                                           self.currentDate, self.session_time, self.room)
+                print_dialog = PrintDialog(order, selected, self.cinema_name,
+                                           self.address, self.film_name,
+                                           self.currentDate, self.session_time,
+                                           self.room)
                 print_dialog.exec()
                 self.stack.setCurrentIndex(0)
             else:
-                QMessageBox.warning(self, "Заказ билетов", "Не выбрано ни одного места!")
+                QMessageBox.warning(self, "Заказ билетов",
+                                    "Не выбрано ни одного места!")
 
     # Найдем номер последнего заказа
     def new_order(self):
@@ -349,7 +371,13 @@ class MyWidget(QMainWindow):
         # Формируем массив с данными
         order = list()
         for row in selected:
-            order.append((id, session_id, row[0] + 1, row[1] + 1, order_name, row[2]))
+            order.append((id,
+                          session_id,
+                          row[0] + 1,
+                          row[1] + 1,
+                          order_name,
+                          row[2])
+                         )
             id += 1
         # Вставляем записи в базу
         cursor.executemany("INSERT INTO ticket VALUES (?,?,?,?,?,?)", order)
@@ -388,19 +416,21 @@ class MyWidget(QMainWindow):
         self.load_poster('empty.png')
         cursor = self.conn.cursor()
         cursor.execute("""
-        SELECT DISTINCT f.id, f.title, g.title as genre, f.rating, f.duration, 
-                        c.title as cinema, f.description, f.premiere, f.producer, f.country, 
-                        f.release, f.original, f.poster
-         FROM session s
-         LEFT JOIN room r ON s.room_id = r.id
-         LEFT JOIN cinema c ON r.cinema_id = c.id
-         LEFT JOIN film f ON s.film_id = f.id
-         LEFT JOIN genre g ON f.genre_id = g.id
-        WHERE s.date = ?
-          and c.id = ?
-          and (g.id = ? or 0 = ?)
-        ORDER BY f.title
-        """, (self.currentDate, self.cinema, self.currentGenre, self.currentGenre))
+            SELECT DISTINCT f.id, f.title, g.title as genre, f.rating,
+                            f.duration, c.title as cinema, f.description,
+                            f.premiere, f.producer, f.country, f.release,
+                            f.original, f.poster
+             FROM session s
+             LEFT JOIN room r ON s.room_id = r.id
+             LEFT JOIN cinema c ON r.cinema_id = c.id
+             LEFT JOIN film f ON s.film_id = f.id
+             LEFT JOIN genre g ON f.genre_id = g.id
+            WHERE s.date = ?
+              and c.id = ?
+              and (g.id = ? or 0 = ?)
+            ORDER BY f.title
+            """, (self.currentDate, self.cinema,
+                  self.currentGenre, self.currentGenre))
         i = 0
         self.tableFilm.clearContents()
         for row in cursor:
@@ -419,18 +449,23 @@ class MyWidget(QMainWindow):
         self.selectSession.setEnabled(False)
         cursor = self.conn.cursor()
         cursor.execute("""
-                SELECT s.id, r.name as room, s.time, 
-                        cast(r.rows * r.cols - ifnull(z.cnt, 0) as text) || ' из ' || cast( r.rows * r.cols as text) as empty,
-                        f.title as film, c.title as cinema
-                 FROM session s
-                 LEFT JOIN room r ON s.room_id = r.id
-                 LEFT JOIN cinema c ON r.cinema_id = c.id
-                 LEFT JOIN film f ON s.film_id = f.id
-                 LEFT JOIN (SELECT t.session_id, count(*) as cnt, sum(price) as price FROM ticket t GROUP BY t.session_id) z ON s.id = z.session_id
-                WHERE s.date = ?
-                  and c.id = ?
-                  and f.id = ?
-                """, (self.currentDate, self.cinema, self.film))
+            SELECT s.id, r.name as room, s.time,
+                    cast(r.rows * r.cols - ifnull(z.cnt, 0) as text)
+                        || ' из '
+                        || cast(r.rows * r.cols as text) as empty,
+                    f.title as film, c.title as cinema
+             FROM session s
+             LEFT JOIN room r ON s.room_id = r.id
+             LEFT JOIN cinema c ON r.cinema_id = c.id
+             LEFT JOIN film f ON s.film_id = f.id
+             LEFT JOIN (
+                SELECT t.session_id, count(*) as cnt
+                  FROM ticket t
+                 GROUP BY t.session_id) z ON s.id = z.session_id
+            WHERE s.date = ?
+              and c.id = ?
+              and f.id = ?
+            """, (self.currentDate, self.cinema, self.film))
         i = 0
         self.tableSession.clearContents()
         for row in cursor:
@@ -443,7 +478,8 @@ class MyWidget(QMainWindow):
 
     # Заполнение lineEdit
     def fill_info_film(self):
-        self.lineFilmInfo.setText(f'Кинотеатр: {self.cinema_name}, Фильм: {self.film_name}')
+        self.lineFilmInfo.setText(f'Кинотеатр: {self.cinema_name}, '
+                                  f'Фильм: {self.film_name}')
 
     # Заполнение comboBox
     def fill_genre(self):
@@ -478,14 +514,22 @@ class MyWidget(QMainWindow):
             self.film_name = self.tableFilm.item(r, 1).text()
             self.selectFilm.setEnabled(True)
             self.infoFilm.clear()
-            self.infoFilm.append(f"<b>Кинотеатр:</b> {self.tableFilm.item(r, 5).text()}")
-            self.infoFilm.append(f"<b>О фильме:</b><br>{self.tableFilm.item(r, 6).text()}")
-            self.infoFilm.append(f"<b>Премьера:</b> {self.tableFilm.item(r, 7).text()}")
-            self.infoFilm.append(f"<b>Продюсер:</b> {self.tableFilm.item(r, 8).text()}")
-            self.infoFilm.append(f"<b>Время:</b> {self.tableFilm.item(r, 4).text()} мин")
-            self.infoFilm.append(f"<b>Страна:</b> {self.tableFilm.item(r, 9).text()}")
-            self.infoFilm.append(f"<b>Год производства:</b> {self.tableFilm.item(r, 10).text()}")
-            self.infoFilm.append(f"<b>Оригинальное название:</b> {self.tableFilm.item(r, 11).text()}")
+            self.infoFilm.append(f"<b>Кинотеатр:</b> "
+                                 f"{self.tableFilm.item(r, 5).text()}")
+            self.infoFilm.append(f"<b>О фильме:</b><br>"
+                                 f"{self.tableFilm.item(r, 6).text()}")
+            self.infoFilm.append(f"<b>Премьера:</b> "
+                                 f"{self.tableFilm.item(r, 7).text()}")
+            self.infoFilm.append(f"<b>Продюсер:</b> "
+                                 f"{self.tableFilm.item(r, 8).text()}")
+            self.infoFilm.append(f"<b>Время:</b> "
+                                 f"{self.tableFilm.item(r, 4).text()} мин")
+            self.infoFilm.append(f"<b>Страна:</b> "
+                                 f"{self.tableFilm.item(r, 9).text()}")
+            self.infoFilm.append(f"<b>Год производства:</b> "
+                                 f"{self.tableFilm.item(r, 10).text()}")
+            self.infoFilm.append(f"<b>Оригинальное название:</b> "
+                                 f"{self.tableFilm.item(r, 11).text()}")
             self.load_poster(self.tableFilm.item(r, 12).text())
 
     # Выбор сеанса в таблице
